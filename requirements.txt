@@ -1,0 +1,6 @@
+customtkinter
+monitorcontrol
+wmi
+pywin32
+pystray
+pillow
