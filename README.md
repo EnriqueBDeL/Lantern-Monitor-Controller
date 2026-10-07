@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="app_logo.png" alt="Lantern Logo" width="120"/>
+</p>
+
 <h1 align="center">💡 Lantern — Universal Monitor Brightness & Contrast Controller</h1>
 
 <p align="center">
