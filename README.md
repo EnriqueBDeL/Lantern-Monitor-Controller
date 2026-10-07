@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/UI-CustomTkinter-2b5b84?style=flat-square" alt="CustomTkinter"/>
   <img src="https://img.shields.io/badge/Creado%20con-Google%20Antigravity-4285F4?style=flat-square&logo=google" alt="Google Antigravity"/>
   <img src="https://img.shields.io/badge/Editor-VS%20Code-007ACC?style=flat-square&logo=visual-studio-code" alt="VS Code"/>
-  <img src="https://img.shields.io/badge/IA%20Pair-Gemini%20Flash%20%2F%20Pro-8E75B2?style=flat-square&logo=google-gemini" alt="Gemini"/>
+  <img src="https://img.shields.io/badge/IA%20Pair-Gemini%20%7C%20Claude-D97706?style=flat-square&logo=anthropic" alt="Gemini & Claude"/>
 </p>
 
 ---
@@ -32,6 +32,7 @@
 **Lantern** es una herramienta de escritorio ligera, moderna y de alto rendimiento diseñada para Windows que permite regular el brillo y el contraste de todos tus monitores desde un único lugar.
 
 Elimina la molestia de usar los botones físicos de los monitores. **Lantern** se comunica directamente con el hardware mediante:
+
 - **WMI (`Windows Management Instrumentation`)**: Para regular el brillo de la pantalla integrada en portátiles y laptops.
 - **DDC/CI (`Display Data Channel Command Interface`)**: Para gestionar brillo y contraste en pantallas y monitores externos conectados por HDMI, DisplayPort o USB-C.
 
@@ -79,16 +80,19 @@ Lantern/
 ## 🚀 Instalación y Puesta en Marcha
 
 ### Prerrequisitos
+
 - Sistema Operativo **Windows 10 / Windows 11**.
 - **Python 3.10** o superior.
 
 ### 1. Clonar el repositorio
+
 ```bash
 git clone https://github.com/TU_USUARIO/Lantern.git
 cd Lantern
 ```
 
 ### 2. Crear entorno virtual e instalar dependencias
+
 ```bat
 py -3 -m venv .venv
 call .venv\Scripts\activate.bat
@@ -96,12 +100,14 @@ pip install -r requirements.txt
 ```
 
 ### 3. Ejecutar la aplicación
+
 ```bat
 python control_monitores.py
 ```
 
 > [!TIP]
 > Si deseas probar la interfaz gráfica sin necesidad de interactuar con monitores físicos, puedes usar el modo demo:
+>
 > ```bat
 > python control_monitores.py --demo
 > ```
@@ -113,9 +119,11 @@ python control_monitores.py
 Puedes empaquetar toda la aplicación en un archivo `.exe` único y portable sin dependencias externas:
 
 ### Método 1 (Recomendado):
+
 Haz doble clic sobre el script [`build_exe.bat`](build_exe.bat). Se encargará de crear el entorno, instalar los módulos necesarios y compilar el archivo final en `dist/Lantern.exe`.
 
 ### Método 2 (Manual por Terminal):
+
 ```powershell
 pip install -r requirements.txt pyinstaller
 pyinstaller --noconfirm --clean Lantern.spec
@@ -150,10 +158,11 @@ GitHub Actions compilará automáticamente el proyecto en un entorno limpio de W
 ## 👨💻 Autor y Créditos
 
 - **Desarrollador Principal**: **EnriqueBDL**
-- **Herramientas de Desarrollo**: Diseñado y refinado utilizando **Google Antigravity**, **Visual Studio Code** y **Gemini**.
+- **Herramientas de Desarrollo**: Diseñado y refinado utilizando **Google Antigravity**, **Visual Studio Code**, **Claude** (Anthropic) y **Gemini** (Google).
 
 ---
 
 <p align="center">
-  Desarrollado con dedicación por <strong>EnriqueBDL</strong> © 2026
+  Desarrollado por <strong>EnriqueBDL</strong> © 2026
 </p>
+
