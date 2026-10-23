@@ -8,6 +8,7 @@ __pycache__/
 # PyInstaller / Build outputs
 build/
 dist/
+installer/
 *.spec.bak
 
 # IDE / Editor files
