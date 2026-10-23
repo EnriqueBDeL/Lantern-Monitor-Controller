@@ -1,9 +1,10 @@
-name: Build exe
+name: Build, sign and release Lantern
 
 on:
-  workflow_dispatch:
   push:
-    tags: ["v*"]
+    tags:
+      - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -11,21 +12,125 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      # La firma solo se activa si has configurado esta variable (ver instrucciones)
+      SIGN: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Calcular versión
+        id: ver
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $v = $env:GITHUB_REF_NAME.TrimStart('v')
+          } else {
+            $v = "dev"
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+
       - name: Instalar dependencias
-        run: pip install -r requirements.txt pyinstaller
-      - name: Compilar
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Compilar Lantern.exe
         run: pyinstaller --noconfirm --clean Lantern.spec
-      - uses: actions/upload-artifact@v4
+
+      # ---------------------------------------------------------- Firma del .exe
+      - name: Subir exe sin firmar
+        id: upload-exe
+        if: env.SIGN == 'true'
+        uses: actions/upload-artifact@v4
         with:
-          name: Lantern
+          name: unsigned-exe
           path: dist/Lantern.exe
-      - name: Publicar en Releases
-        if: startsWith(github.ref, 'refs/tags/')
+
+      - name: Firmar exe con SignPath
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: exe
+          github-artifact-id: ${{ steps.upload-exe.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-exe
+
+      - name: Sustituir por el exe firmado
+        if: env.SIGN == 'true'
+        shell: pwsh
+        run: Copy-Item signed-exe\Lantern.exe dist\Lantern.exe -Force
+
+      # ---------------------------------------------------------- Instalador
+      - name: Instalar Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --no-progress -y
+          }
+
+      - name: Compilar instalador
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=${{ steps.ver.outputs.version }}" Lantern.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # ---------------------------------------------------------- Firma del instalador
+      - name: Subir instalador sin firmar
+        id: upload-setup
+        if: env.SIGN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-installer
+          path: installer/Lantern-Setup.exe
+
+      - name: Firmar instalador con SignPath
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: installer
+          github-artifact-id: ${{ steps.upload-setup.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed-installer
+
+      - name: Sustituir por el instalador firmado
+        if: env.SIGN == 'true'
+        shell: pwsh
+        run: Copy-Item signed-installer\Lantern-Setup.exe installer\Lantern-Setup.exe -Force
+
+      # ---------------------------------------------------------- Publicación
+      - name: Renombrar con versión
+        shell: pwsh
+        run: |
+          Rename-Item installer\Lantern-Setup.exe "Lantern-Setup-${{ steps.ver.outputs.version }}.exe"
+
+      - name: Guardar artefactos finales
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lantern-${{ steps.ver.outputs.version }}
+          path: |
+            installer/Lantern-Setup-*.exe
+            dist/Lantern.exe
+
+      - name: Crear Release en GitHub
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/Lantern.exe
+          files: |
+            installer/Lantern-Setup-*.exe
+            dist/Lantern.exe
+          generate_release_notes: true
